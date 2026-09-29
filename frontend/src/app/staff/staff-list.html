@@ -1,0 +1,46 @@
+<h1 class="h3 mb-1">Staff pool</h1>
+<p class="text-body-secondary">Everyone who can be assigned to shifts, with how far they are willing to travel.</p>
+
+<div class="row g-2 mb-3">
+  <div class="col-sm-4 col-md-3">
+    <select class="form-select" [(ngModel)]="role" (ngModelChange)="load()" aria-label="Filter by role">
+      <option value="">All roles</option>
+      @for (r of roles; track r) {
+        <option [value]="r">{{ r | roleLabel }}</option>
+      }
+    </select>
+  </div>
+  <div class="col-sm-4 col-md-3">
+    <select class="form-select" [(ngModel)]="city" (ngModelChange)="load()" aria-label="Filter by city">
+      <option [ngValue]="null">All cities</option>
+      @for (c of cities(); track c.id) {
+        <option [ngValue]="c.id">{{ c.name }}</option>
+      }
+    </select>
+  </div>
+</div>
+
+@if (error()) {
+  <div class="alert alert-danger">{{ error() }}</div>
+}
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <thead>
+      <tr><th>Name</th><th>Role</th><th>City</th><th class="text-end">Travels up to</th></tr>
+    </thead>
+    <tbody>
+      @for (member of staff(); track member.id) {
+        <tr [class.text-body-secondary]="!member.active">
+          <td>{{ member.full_name }}</td>
+          <td>{{ member.role | roleLabel }}</td>
+          <td>{{ member.city_name }}</td>
+          <td class="text-end">{{ member.max_travel_km }} km</td>
+        </tr>
+      } @empty {
+        <tr><td colspan="4" class="text-body-secondary">Nobody matches these filters.</td></tr>
+      }
+    </tbody>
+  </table>
+</div>
+<p class="small text-body-secondary">{{ staff().length }} people</p>

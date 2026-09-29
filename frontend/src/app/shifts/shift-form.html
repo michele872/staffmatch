@@ -1,0 +1,87 @@
+<a routerLink="/shifts" class="small text-decoration-none">← All shifts</a>
+<h1 class="h3 mt-2 mb-4">New shift</h1>
+
+@if (aiEnabled()) {
+  <div class="card mb-4 ai-card">
+    <div class="card-body">
+      <label for="request-text" class="form-label fw-semibold">Paste the facility's request</label>
+      <p class="small text-body-secondary mb-2">
+        Claude reads the text and fills in the form below. Nothing is saved until you review it and click Save.
+      </p>
+      <textarea id="request-text" class="form-control mb-2" rows="3" [formControl]="requestText"
+                placeholder="e.g. Night shift at our care home in Bergamo on 14 June, 60 patients. We need 2 nurses, 3 care assistants and a physiotherapist."></textarea>
+      <button type="button" class="btn btn-outline-primary" (click)="fillWithAi()"
+              [disabled]="drafting() || !requestText.value.trim()">
+        {{ drafting() ? 'Reading the request…' : 'Fill in with AI' }}
+      </button>
+    </div>
+  </div>
+}
+
+@if (draftNotice()) {
+  <div class="alert alert-info">{{ draftNotice() }}</div>
+}
+@if (error()) {
+  <div class="alert alert-danger">{{ error() }}</div>
+}
+
+<form [formGroup]="form" (ngSubmit)="save()" novalidate class="card">
+  <div class="card-body row g-3">
+    <div class="col-md-6">
+      <label for="title" class="form-label">Title</label>
+      <input id="title" class="form-control" formControlName="title" [class.is-invalid]="invalid('title')" />
+    </div>
+    <div class="col-md-3">
+      <label for="date" class="form-label">Date</label>
+      <input id="date" type="date" class="form-control" formControlName="date" [class.is-invalid]="invalid('date')" />
+    </div>
+    <div class="col-md-3">
+      <label for="patients" class="form-label">Patients</label>
+      <input id="patients" type="number" min="1" class="form-control" formControlName="patients"
+             [class.is-invalid]="invalid('patients')" />
+    </div>
+    <div class="col-md-6">
+      <label for="city" class="form-label">City</label>
+      <select id="city" class="form-select" formControlName="city" [class.is-invalid]="invalid('city')">
+        <option [ngValue]="null" disabled>Choose a city</option>
+        @for (city of cities(); track city.id) {
+          <option [ngValue]="city.id">{{ city.name }}</option>
+        }
+      </select>
+    </div>
+    <div class="col-md-6">
+      <label for="notes" class="form-label">Notes</label>
+      <input id="notes" class="form-control" formControlName="notes" />
+    </div>
+
+    <div class="col-12">
+      <span class="form-label d-block">Staff needed</span>
+      <div formArrayName="requirements">
+        @for (group of requirements.controls; track group; let i = $index) {
+          <div class="row g-2 mb-2" [formGroupName]="i">
+            <div class="col-7 col-md-4">
+              <select class="form-select" formControlName="role" [attr.aria-label]="'Role ' + (i + 1)">
+                @for (role of roles; track role) {
+                  <option [value]="role">{{ role | roleLabel }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-3 col-md-2">
+              <input type="number" min="1" class="form-control" formControlName="quantity"
+                     [attr.aria-label]="'Quantity ' + (i + 1)" />
+            </div>
+            <div class="col-2">
+              <button type="button" class="btn btn-outline-secondary" (click)="removeRequirement(i)"
+                      [disabled]="requirements.length === 1" aria-label="Remove role">✕</button>
+            </div>
+          </div>
+        }
+      </div>
+      <button type="button" class="btn btn-link px-0" (click)="addRequirement()"
+              [disabled]="requirements.length >= roles.length">+ Add role</button>
+    </div>
+  </div>
+  <div class="card-footer text-end">
+    <button type="submit" class="btn btn-primary" [disabled]="saving()">Save shift</button>
+  </div>
+</form>

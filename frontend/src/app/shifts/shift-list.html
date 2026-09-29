@@ -1,0 +1,44 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h3 mb-1">Upcoming shifts</h1>
+    <p class="text-body-secondary mb-0">Staff each shift with the closest available people.</p>
+  </div>
+  <a routerLink="/shifts/new" class="btn btn-primary">New shift</a>
+</div>
+
+@if (loading()) {
+  <p class="text-body-secondary">Loading shifts…</p>
+} @else if (error()) {
+  <div class="alert alert-danger">{{ error() }}</div>
+} @else {
+  <div class="row g-3">
+    @for (shift of shifts(); track shift.id) {
+      <div class="col-md-6 col-xl-4">
+        <a [routerLink]="['/shifts', shift.id]" class="card h-100 text-decoration-none shift-card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between">
+              <h2 class="h5 card-title mb-1">{{ shift.title }}</h2>
+              @if (shift.assigned_staff >= shift.required_staff) {
+                <span class="badge text-bg-success align-self-start">Fully staffed</span>
+              } @else {
+                <span class="badge text-bg-warning align-self-start">
+                  {{ shift.required_staff - shift.assigned_staff }} open
+                </span>
+              }
+            </div>
+            <p class="text-body-secondary small mb-3">
+              {{ shift.date | date: 'EEE d MMM y' }} · {{ shift.city_name }} · {{ shift.patients }} patients
+            </p>
+            <div class="progress" role="progressbar" [attr.aria-valuenow]="progress(shift)"
+                 aria-valuemin="0" aria-valuemax="100" aria-label="Staffing progress">
+              <div class="progress-bar" [style.width.%]="progress(shift)"></div>
+            </div>
+            <p class="small mt-2 mb-0">{{ shift.assigned_staff }} / {{ shift.required_staff }} staff assigned</p>
+          </div>
+        </a>
+      </div>
+    } @empty {
+      <p class="text-body-secondary">No shifts yet. Create the first one.</p>
+    }
+  </div>
+}

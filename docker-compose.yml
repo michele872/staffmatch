@@ -1,0 +1,44 @@
+services:
+  db:
+    image: postgis/postgis:17-3.5
+    # The official PostGIS image is published for amd64 only;
+    # on Apple Silicon Docker runs it through emulation.
+    platform: linux/amd64
+    environment:
+      POSTGRES_DB: staffmatch
+      POSTGRES_USER: staffmatch
+      POSTGRES_PASSWORD: staffmatch
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      # Check over TCP: on first start the image runs a temporary server that
+      # only listens on the Unix socket while it installs PostGIS.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U staffmatch -d staffmatch"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build: ./backend
+    restart: on-failure
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: staffmatch
+      POSTGRES_USER: staffmatch
+      POSTGRES_PASSWORD: staffmatch
+      DJANGO_DEBUG: "false"
+      # Optional: enables the AI-assisted shift intake. Put it in a .env file.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  db-data:
